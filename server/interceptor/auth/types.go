@@ -5,9 +5,9 @@ import (
 )
 
 type (
-	// RefreshTokenFn defines the function signature for refreshing tokens
+	// RefreshTokenFn defines the function signature for refreshing tokens.
+	// NOTE: It should obtain the refresh token from the context and it should set the issued tokens in the context.
 	RefreshTokenFn func(
 		ctx context.Context,
-		refreshToken string,
-	) (newRefreshToken, newAccessToken string, err error)
+	) error
 )

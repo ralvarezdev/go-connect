@@ -6,12 +6,6 @@ type (
 )
 
 const (	
-	// CtxTokenKey is the context key for the token
-	CtxTokenKey ContextKey = "token"
-	
-	// CtxTokenClaimsKey is the context key for the token claims
-	CtxTokenClaimsKey ContextKey = "token_claims"
-	
 	// CtxIssuedAccessTokenKey is the context key for the issued access token
 	CtxIssuedAccessTokenKey ContextKey = "issued_access_token"
 	

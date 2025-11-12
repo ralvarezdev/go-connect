@@ -58,7 +58,7 @@ func (i Interceptor) Catch() connect.UnaryInterceptorFunc {
 			
 			// Get the response header
 			respHeader := resp.Header()
-
+			
 			// Try to get the issued refresh and access tokens from the context
 			refreshToken, err := goconnectserverctx.GetCtxIssuedRefreshToken(ctx)
 			if err == nil {

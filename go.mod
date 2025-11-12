@@ -4,13 +4,13 @@ go 1.25.3
 
 require (
 	connectrpc.com/connect v1.19.1
-	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/ralvarezdev/go-grpc v0.6.4
 	github.com/ralvarezdev/go-jwt v0.8.1
 	google.golang.org/grpc v1.76.0
 )
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/ralvarezdev/go-flags v0.3.8 // indirect
 	github.com/ralvarezdev/go-reflect v0.3.1 // indirect
 	github.com/ralvarezdev/go-strings v0.2.3 // indirect

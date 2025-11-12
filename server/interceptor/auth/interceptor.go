@@ -6,8 +6,8 @@ import (
 
 	"connectrpc.com/connect"
 	goconnect "github.com/ralvarezdev/go-connect"
-	goconnectserverctx "github.com/ralvarezdev/go-connect/server/context"
 	gogrpc "github.com/ralvarezdev/go-grpc"
+	gojwtgrpc "github.com/ralvarezdev/go-jwt/grpc"
 	gojwttoken "github.com/ralvarezdev/go-jwt/token"
 	gojwtvalidator "github.com/ralvarezdev/go-jwt/token/validator"
 	"google.golang.org/grpc/codes"
@@ -136,13 +136,21 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 						ErrUnauthenticated.Error(),
 					)
 				}
+				
+				// Validate the refresh token and get the validated claims
+				refreshTokenClaims, err := i.validator.ValidateClaims(ctx, refreshToken, *interception)
+				if err != nil {
+					return nil, status.Error(codes.Internal, gogrpc.InternalServerError)
+				}
+				
+				// Set the raw token and token claims to the context
+				ctx = gojwtgrpc.SetCtxToken(ctx, refreshToken)
+				ctx = gojwtgrpc.SetCtxTokenClaims(ctx, refreshTokenClaims)				
 
-				// Refresh the access token using the refresh token
-				newRefreshToken, newAccessToken, refreshErr := i.options.RefreshTokenFn(
+				// Refresh the access token using the refresh token claims (sho
+			 	if refreshErr := i.options.RefreshTokenFn(
 					ctx,
-					refreshToken,
-				)
-				if refreshErr != nil {
+				); refreshErr != nil {
 					// Log the error
 					if i.logger != nil {
 						i.logger.Error(
@@ -156,17 +164,7 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 						ErrFailedToRefreshToken,
 					)
 				}
-
-				// Set the new refresh and access tokens in the context as issued tokens
-				ctx = goconnectserverctx.SetCtxIssuedRefreshToken(ctx, newRefreshToken)
-				ctx = goconnectserverctx.SetCtxIssuedAccessToken(ctx, newAccessToken)
-
-				// Use the new token for authentication
-				if isRefreshTokenInterception {
-					token = newRefreshToken
-				} else {
-					token = newAccessToken
-				}
+				return next(ctx, req)
 			}
 
 			// Validate the token and get the validated claims
@@ -176,8 +174,8 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 			}
 
 			// Set the raw token and token claims to the context
-			ctx = goconnectserverctx.SetCtxToken(ctx, token)
-			ctx = goconnectserverctx.SetCtxTokenClaims(ctx, claims)
+			ctx = gojwtgrpc.SetCtxToken(ctx, token)
+			ctx = gojwtgrpc.SetCtxTokenClaims(ctx, claims)
 
 			// 3. Continue to the next handler/service logic
 			return next(ctx, req)

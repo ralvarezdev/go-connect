@@ -10,6 +10,7 @@ import (
 	gojwtgrpc "github.com/ralvarezdev/go-jwt/grpc"
 	gojwttoken "github.com/ralvarezdev/go-jwt/token"
 	gojwtvalidator "github.com/ralvarezdev/go-jwt/token/validator"
+	goconnectrequest "github.com/ralvarezdev/go-connect/server/request"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -25,8 +26,13 @@ type (
 
 	// Options is the options for the authentication interceptor
 	Options struct {
+		// CustomRefreshTokenName is the custom name for the refresh token (if nil, the default name will be used)
 		CustomRefreshTokenName *string
+		
+		// CustomAccessTokenName is the custom name for the access token (if nil, the default name will be used)
 		CustomAccessTokenName  *string
+		
+		// RefreshTokenFn is the function to refresh the access token using the refresh token
 		RefreshTokenFn         RefreshTokenFn
 	}
 )
@@ -115,8 +121,16 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 				customName = i.options.CustomAccessTokenName
 			}
 
-			// Try to find the token from any source
-			reqHeader := req.Header()
+			// Extract the request headers from the context
+			reqHeader, err := goconnectrequest.GetHeadersFromRequestContext(ctx)
+			if err != nil {
+				return nil, status.Error(
+					codes.Unauthenticated,
+					ErrUnauthenticated.Error(),
+				)
+			}
+			
+			// Extract the token from the request
 			token, err := FindAuthorizationToken(reqHeader, customName, &cookieName)
 			if err != nil {
 				// Try to refresh the access token if the interception is for access tokens

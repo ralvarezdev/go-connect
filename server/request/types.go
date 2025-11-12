@@ -11,6 +11,15 @@ type (
 	DefaultInterceptor struct{}
 )
 
+// NewDefaultInterceptor creates a new default interceptor
+// 
+// Returns:
+// 
+// - DefaultInterceptor: the default interceptor
+func NewDefaultInterceptor() DefaultInterceptor {
+	return DefaultInterceptor{}
+}
+
 // CreateClientContextFromRequestContext creates a client context from the request context, injecting specified headers
 //
 // Parameters:

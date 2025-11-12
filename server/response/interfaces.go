@@ -9,12 +9,12 @@ import (
 type (
 	// Injector is used to inject headers into the response headers
 	Injector interface {
-		InjectAccessAndRefreshTokens(
+		InjectTokens(
 			ctx context.Context,
 			refreshToken,
 			accessToken string,
 		) error
-		InjectAccessAndRefreshTokensFromContext(
+		InjectTokensFromContext(
 			ctx context.Context,
 		) error
 		InjectHeadersFromCallInfo(

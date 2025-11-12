@@ -52,7 +52,7 @@ func NewDefaultInterceptor(
 	}
 }
 
-// InjectAccessAndRefreshToken injects the access and refresh tokens into the response headers
+// InjectTokens injects the access and refresh tokens into the response headers
 //
 // Parameters:
 //
@@ -63,7 +63,7 @@ func NewDefaultInterceptor(
 // Returns:
 //
 // - error: if there was an error injecting the tokens into the response headers
-func (i DefaultInterceptor) InjectAccessAndRefreshTokens(
+func (i DefaultInterceptor) InjectTokens(
 	ctx context.Context,
 	refreshToken, accessToken string,
 ) error {
@@ -121,7 +121,7 @@ func (i DefaultInterceptor) InjectAccessAndRefreshTokens(
 	return nil
 }
 
-// InjectRefreshAndAccessTokensFromContext injects the refresh and access tokens from the context into the response headers
+// InjectTokensFromContext injects the refresh and access tokens from the context into the response headers
 //
 // Parameters:
 //
@@ -130,7 +130,7 @@ func (i DefaultInterceptor) InjectAccessAndRefreshTokens(
 // Returns:
 //
 // - error: if there was an error injecting the tokens into the response headers
-func (i DefaultInterceptor) InjectRefreshAndAccessTokensFromContext(
+func (i DefaultInterceptor) InjectTokensFromContext(
 	ctx context.Context,
 ) error {
 	// Try to get the issued refresh token from the context
@@ -145,7 +145,7 @@ func (i DefaultInterceptor) InjectRefreshAndAccessTokensFromContext(
 		return err
 	}
 
-	return i.InjectAccessAndRefreshTokens(
+	return i.InjectTokens(
 		ctx,
 		refreshToken,
 		accessToken,

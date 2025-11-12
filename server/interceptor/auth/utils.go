@@ -4,17 +4,18 @@ import (
 	"net/http"
 	"strings"
 
-	goconnect "github.com/ralvarezdev/go-connect"
 	gojwt "github.com/ralvarezdev/go-jwt"
+
+	goconnect "github.com/ralvarezdev/go-connect"
 )
 
 // FindAuthorizationToken extracts the authorization token from the HTTP headers.
 //
 // Parameters:
 //
-//  - header: the HTTP headers to extract the token from
-//  - customName: optional custom header name to check for the token
-//  - cookieName: the name of the cookie to check for the token
+//   - header: the HTTP headers to extract the token from
+//   - customName: optional custom header name to check for the token
+//   - cookieName: the name of the cookie to check for the token
 //
 // Returns:
 //
@@ -45,7 +46,7 @@ func FindAuthorizationToken(header http.Header, customName, cookieName *string) 
 	if cookieName == nil || *cookieName == "" {
 		return "", goconnect.ErrMissingAuthorization
 	}
-	
+
 	// Check for the token in the specified cookie
 	authCookie := header.Get(*cookieName)
 	if authCookie == "" {

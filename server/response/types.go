@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+
 	goconnect "github.com/ralvarezdev/go-connect"
 	goconnectserverctx "github.com/ralvarezdev/go-connect/server/context"
 )
@@ -79,7 +80,10 @@ func (i DefaultInterceptor) InjectTokens(
 
 	// Get the cookie attributes for refresh token
 	if i.options != nil && i.options.CookieAttributes != nil {
-		for _, cookieAttributes := range i.options.CookieAttributes {
+		for idx := range len(i.options.CookieAttributes) {
+			// Get the cookie attributes
+			cookieAttributes := i.options.CookieAttributes[idx]
+
 			switch cookieAttributes.Name {
 			case goconnect.RefreshTokenCookieName:
 				// Set the refresh token cookie value and duration to the cookie attributes
@@ -96,7 +100,7 @@ func (i DefaultInterceptor) InjectTokens(
 				if accessToken == "" {
 					cookieAttributes.Expires = time.Time{} // Expire the cookie immediately
 				}
-				
+
 				// Set the "Set-Cookie" header
 				respHeader.Set("Set-Cookie", cookieAttributes.String())
 			}

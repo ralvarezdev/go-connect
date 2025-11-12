@@ -156,7 +156,7 @@ func (i DefaultInterceptor) InjectRefreshAndAccessTokensFromContext(
 // 
 // Parameters:
 // 
-// - ctx: the request context
+// - originalCtx: the request context
 // - headers: the headers to inject
 // 
 // Returns:
@@ -164,12 +164,12 @@ func (i DefaultInterceptor) InjectRefreshAndAccessTokensFromContext(
 // - context.Context: the client context
 // - error: if there was an error creating the client context
 func (i DefaultInterceptor) CreateClientContextFromRequestContext(
-	ctx context.Context, headers ...string,
-) (context.Context, error) {
+	originalCtx context.Context, headers ...string,
+) (ctx context.Context,  callInfo connect.CallInfo, err error) {
 	// Get the call info from the context
-	originalHeaders, err := GetHeadersFromRequestContext(ctx)
+	originalHeaders, err := GetHeadersFromRequestContext(originalCtx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	
 	// Create the client context
@@ -184,5 +184,35 @@ func (i DefaultInterceptor) CreateClientContextFromRequestContext(
 		callInfo.RequestHeader().Set(header, originalValue)
 	}
 	
-	return clientCtx, err	
+	return clientCtx, nil, err	
+}
+
+// InjectHeadersFromCallInfo injects headers from the call info into the response headers
+// 
+// Parameters:
+// 
+// - ctx: the context
+// - callInfo: the call info
+// 
+// Returns:
+// 
+// - error: if there was an error injecting the headers
+func (i DefaultInterceptor) InjectHeadersFromCallInfo(
+	ctx context.Context,
+	callInfo connect.CallInfo,
+) error {
+	// Try to get the response headers from the context
+	respHeader, err := GetHeadersFromRequestContext(ctx)
+	if err != nil {
+		return err
+	}
+	
+	// Inject the headers from the call info into the response headers
+	for key, values := range callInfo.ResponseHeader() {
+		// Add all values for the key
+		for _, value := range values {
+			respHeader.Add(key, value)
+		}
+	}
+	return nil
 }

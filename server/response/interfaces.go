@@ -2,6 +2,8 @@ package headers
 
 import (
 	"context"
+
+	"connectrpc.com/connect"
 )
 
 type (
@@ -18,5 +20,9 @@ type (
 		CreateClientContextFromRequestContext(
 			ctx context.Context, headers ...string,
 		) (context.Context, error)
+		InjectHeadersFromCallInfo(
+			ctx context.Context,
+			callInfo connect.CallInfo,
+		) error
 	}
 )

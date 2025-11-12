@@ -1,4 +1,4 @@
-package headers
+package response
 
 import (
 	"context"
@@ -17,9 +17,6 @@ type (
 		InjectAccessAndRefreshTokensFromContext(
 			ctx context.Context,
 		) error
-		CreateClientContextFromRequestContext(
-			ctx context.Context, headers ...string,
-		) (context.Context, error)
 		InjectHeadersFromCallInfo(
 			ctx context.Context,
 			callInfo connect.CallInfo,

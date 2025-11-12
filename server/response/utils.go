@@ -1,4 +1,4 @@
-package headers
+package response
 
 import (
 	"context"

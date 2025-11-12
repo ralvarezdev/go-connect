@@ -26,12 +26,6 @@ type (
 
 		// CookieAttributes is a map of cookie attributes to use for the tokens
 		CookieAttributes []http.Cookie
-
-		// CookieRefreshTokenDuration is the duration to set for the refresh token cookie
-		CookieRefreshTokenDuration *time.Duration
-
-		// CookieAccessTokenDuration is the duration to set for the access token cookie
-		CookieAccessTokenDuration *time.Duration
 	}
 )
 
@@ -93,9 +87,6 @@ func (i DefaultInterceptor) InjectTokens(
 				if refreshToken == "" {
 					cookieAttributes.Expires = time.Time{} // Expire the cookie immediately
 				}
-				if i.options.CookieRefreshTokenDuration != nil {
-					cookieAttributes.Expires = time.Now().Add(*i.options.CookieRefreshTokenDuration)
-				}
 
 				// Set the "Set-Cookie" header
 				respHeader.Set("Set-Cookie", cookieAttributes.String())
@@ -105,10 +96,7 @@ func (i DefaultInterceptor) InjectTokens(
 				if accessToken == "" {
 					cookieAttributes.Expires = time.Time{} // Expire the cookie immediately
 				}
-				if i.options.CookieAccessTokenDuration != nil {
-					cookieAttributes.Expires = time.Now().Add(*i.options.CookieAccessTokenDuration)
-				}
-
+				
 				// Set the "Set-Cookie" header
 				respHeader.Set("Set-Cookie", cookieAttributes.String())
 			}

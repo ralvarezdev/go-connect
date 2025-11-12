@@ -25,7 +25,7 @@ type (
 		CustomAccessTokenName *string
 
 		// CookieAttributes is a map of cookie attributes to use for the tokens
-		CookieAttributes map[string]http.Cookie
+		CookieAttributes []http.Cookie
 
 		// CookieRefreshTokenDuration is the duration to set for the refresh token cookie
 		CookieRefreshTokenDuration *time.Duration
@@ -78,44 +78,40 @@ func (i DefaultInterceptor) InjectTokens(
 		respHeader.Set(*i.options.CustomRefreshTokenName, refreshToken)
 	}
 
-	// Get the cookie attributes for refresh token
-	if i.options != nil && i.options.CookieAttributes != nil {
-		cookieAttributes, ok := i.options.CookieAttributes[goconnect.RefreshTokenCookieName]
-		if ok {
-			// Set the refresh token cookie value and duration to the cookie attributes
-			cookieAttributes.Value = refreshToken
-			if refreshToken == "" {
-				cookieAttributes.Expires = time.Time{} // Expire the cookie immediately
-			}
-			if i.options.CookieRefreshTokenDuration != nil {
-				cookieAttributes.Expires = time.Now().Add(*i.options.CookieRefreshTokenDuration)
-			}
-
-			// Set the "Set-Cookie" header
-			respHeader.Set("Set-Cookie", cookieAttributes.String())
-		}
-	}
-
 	// Set the issued token to use as a custom header
 	if i.options != nil && i.options.CustomAccessTokenName != nil {
 		respHeader.Set(*i.options.CustomAccessTokenName, accessToken)
 	}
 
-	// Get the cookie attributes for access token
+	// Get the cookie attributes for refresh token
 	if i.options != nil && i.options.CookieAttributes != nil {
-		cookieAttributes, ok := i.options.CookieAttributes[goconnect.AccessTokenCookieName]
-		if ok {
-			// Set the access token cookie value and duration to the cookie attributes
-			cookieAttributes.Value = accessToken
-			if accessToken == "" {
-				cookieAttributes.Expires = time.Time{} // Expire the cookie immediately
-			}
-			if i.options.CookieAccessTokenDuration != nil {
-				cookieAttributes.Expires = time.Now().Add(*i.options.CookieAccessTokenDuration)
-			}
+		for _, cookieAttributes := range i.options.CookieAttributes {
+			switch cookieAttributes.Name {
+			case goconnect.RefreshTokenCookieName:
+				// Set the refresh token cookie value and duration to the cookie attributes
+				cookieAttributes.Value = refreshToken
+				if refreshToken == "" {
+					cookieAttributes.Expires = time.Time{} // Expire the cookie immediately
+				}
+				if i.options.CookieRefreshTokenDuration != nil {
+					cookieAttributes.Expires = time.Now().Add(*i.options.CookieRefreshTokenDuration)
+				}
 
-			// Set the "Set-Cookie" header
-			respHeader.Set("Set-Cookie", cookieAttributes.String())
+				// Set the "Set-Cookie" header
+				respHeader.Set("Set-Cookie", cookieAttributes.String())
+			case goconnect.AccessTokenCookieName:
+				// Set the access token cookie value and duration to the cookie attributes
+				cookieAttributes.Value = accessToken
+				if accessToken == "" {
+					cookieAttributes.Expires = time.Time{} // Expire the cookie immediately
+				}
+				if i.options.CookieAccessTokenDuration != nil {
+					cookieAttributes.Expires = time.Now().Add(*i.options.CookieAccessTokenDuration)
+				}
+
+				// Set the "Set-Cookie" header
+				respHeader.Set("Set-Cookie", cookieAttributes.String())
+			}
 		}
 	}
 	return nil
@@ -153,14 +149,14 @@ func (i DefaultInterceptor) InjectTokensFromContext(
 }
 
 // InjectHeadersFromCallInfo injects headers from the call info into the response headers
-// 
+//
 // Parameters:
-// 
+//
 // - ctx: the context
 // - callInfo: the call info
-// 
+//
 // Returns:
-// 
+//
 // - error: if there was an error injecting the headers
 func (i DefaultInterceptor) InjectHeadersFromCallInfo(
 	ctx context.Context,
@@ -171,7 +167,7 @@ func (i DefaultInterceptor) InjectHeadersFromCallInfo(
 	if err != nil {
 		return err
 	}
-	
+
 	// Inject the headers from the call info into the response headers
 	for key, values := range callInfo.ResponseHeader() {
 		// Add all values for the key

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"connectrpc.com/connect"
+	goconnect "github.com/ralvarezdev/go-connect"
 	goconnectserverctx "github.com/ralvarezdev/go-connect/server/context"
 	gogrpc "github.com/ralvarezdev/go-grpc"
 	gojwttoken "github.com/ralvarezdev/go-jwt/token"
@@ -24,34 +25,11 @@ type (
 
 	// Options is the options for the authentication interceptor
 	Options struct {
-		CookieRefreshTokenName *string
-		CookieAccessTokenName  *string
+		CustomRefreshTokenName *string
+		CustomAccessTokenName  *string
 		RefreshTokenFn         RefreshTokenFn
 	}
 )
-
-// NewOptions creates a new Options struct
-//
-// Parameters:
-//
-//   - cookieRefreshTokenName: The name of the cookie that contains the refresh token
-//   - cookieAccessTokenName: The name of the cookie that contains the access token
-//   - refreshTokenFn: The function to refresh the access token using the refresh token
-//
-// Returns:
-//
-//   - *Options: The options for the authentication Interceptor
-func NewOptions(
-	cookieRefreshTokenName,
-	cookieAccessTokenName *string,
-	refreshTokenFn RefreshTokenFn,
-) *Options {
-	return &Options{
-		cookieRefreshTokenName,
-		cookieAccessTokenName,
-		refreshTokenFn,
-	}
-}
 
 // NewInterceptor creates a new authentication interceptor
 //
@@ -125,16 +103,21 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 			isRefreshTokenInterception := *interception == gojwttoken.RefreshToken
 
 			// Get the cookie name from the options if set
-			var cookieName *string
+			var (
+				cookieName string
+			 	customName *string
+			)
 			if isRefreshTokenInterception && i.options != nil {
-				cookieName = i.options.CookieRefreshTokenName
+				cookieName = goconnect.RefreshTokenCookieName
+				customName = i.options.CustomRefreshTokenName
 			} else if i.options != nil {
-				cookieName = i.options.CookieAccessTokenName
+				cookieName = goconnect.AccessTokenCookieName
+				customName = i.options.CustomAccessTokenName
 			}
 
 			// Try to find the token from any source
 			reqHeader := req.Header()
-			token, err := FindAuthorizationToken(reqHeader, cookieName)
+			token, err := FindAuthorizationToken(reqHeader, customName, &cookieName)
 			if err != nil {
 				// Try to refresh the access token if the interception is for access tokens
 				if isRefreshTokenInterception || i.options.RefreshTokenFn == nil {
@@ -145,8 +128,9 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 				}
 
 				// Get the refresh token from the header
-				refreshToken := reqHeader.Get(*i.options.CookieRefreshTokenName)
-				if refreshToken == "" {
+				cookieName = goconnect.RefreshTokenCookieName
+				refreshToken, err := FindAuthorizationToken(reqHeader, customName, &cookieName)
+				if err != nil {
 					return nil, status.Error(
 						codes.Unauthenticated,
 						ErrUnauthenticated.Error(),
@@ -164,7 +148,7 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 						i.logger.Error(
 							"Failed to refresh token",
 							slog.String("method", method),
-							slog.String("error", err.Error()),
+							slog.String("error", refreshErr.Error()),
 						)
 					}
 					return nil, connect.NewError(

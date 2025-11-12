@@ -13,15 +13,22 @@ import (
 // Parameters:
 //
 //  - header: the HTTP headers to extract the token from
+//  - customName: optional custom header name to check for the token
 //  - cookieName: the name of the cookie to check for the token
 //
 // Returns:
 //
 // - string: the extracted authorization token, or an empty string if not found
 // - error: if there was an error during extraction
-func FindAuthorizationToken(header http.Header, cookieName *string) (token string, err error) {
+func FindAuthorizationToken(header http.Header, customName, cookieName *string) (token string, err error) {
 	// Check for the Authorization header
 	authHeader := header.Get(goconnect.AuthorizationKey)
+	if authHeader == "" && customName != nil && *customName != "" {
+		// Check for the custom header if provided
+		authHeader = header.Get(*customName)
+	}
+
+	// If Authorization header is found, process it
 	if authHeader != "" {
 		// Split the authorization value by space
 		authFields := strings.Split(authHeader, " ")

@@ -2,14 +2,16 @@ package context
 
 import (
 	"context"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // GetCtxToken retrieves the token from the context
-// 
+//
 // Parameters:
-// 
+//
 //  - ctx: the context
-// 
+//
 // Returns:
 //
 //   - string: the token
@@ -55,7 +57,7 @@ func SetCtxToken(
 // Returns:
 // 
 // - jwt.MapClaims: the token claims
-func GetCtxTokenClaims(ctx context.Context) (map[string]interface{}, error) {
+func GetCtxTokenClaims(ctx context.Context) (jwt.MapClaims, error) {
 	// Get the token claims from the context
 	tokenClaims := ctx.Value(CtxTokenClaimsKey)
 	if tokenClaims == nil {
@@ -63,7 +65,7 @@ func GetCtxTokenClaims(ctx context.Context) (map[string]interface{}, error) {
 	}
 	
 	// Assert the token claims type
-	tokenClaimsMap, ok := tokenClaims.(map[string]interface{})
+	tokenClaimsMap, ok := tokenClaims.(jwt.MapClaims)
 	if !ok {
 		return nil, ErrInvalidTokenClaimsInContext
 	}
@@ -82,7 +84,7 @@ func GetCtxTokenClaims(ctx context.Context) (map[string]interface{}, error) {
 // - context.Context: the context with the token claims set
 func SetCtxTokenClaims(
 	ctx context.Context,
-	tokenClaims map[string]interface{},
+	tokenClaims jwt.MapClaims,
 ) context.Context {
 	return context.WithValue(ctx, CtxTokenClaimsKey, tokenClaims)
 }

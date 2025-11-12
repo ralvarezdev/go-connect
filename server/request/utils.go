@@ -31,3 +31,35 @@ func GetHeadersFromRequestContext(
 	// Get the request headers from the call info
 	return callInfo.RequestHeader(), nil
 }
+
+// SetHeadersToCallInfo injects the specified headers from the headers into the call info
+// 
+// Parameters:
+// 
+//  - headers: The headers to inject
+//  - callInfo: The call info to inject the headers into
+//  - keys: The keys of the headers to inject
+func SetHeadersToCallInfo(
+	headers http.Header,
+	callInfo connect.CallInfo,
+	keys...string,
+) {
+	if callInfo == nil || headers == nil || len(keys) == 0 {
+		return
+	}
+	
+	// Get the request headers from the call info
+	reqHeaders := callInfo.RequestHeader()
+	
+	// Iterate over the keys
+	for _, key := range keys {
+		// Check if the headers contain the key
+		header := headers.Get(key)
+		if header == "" {
+			continue
+		}
+
+		// Inject the header
+		reqHeaders.Set(key, header)
+	}
+}

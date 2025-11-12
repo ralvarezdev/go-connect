@@ -161,11 +161,6 @@ func (i DefaultInterceptor) InjectHeadersFromCallInfo(
 	}
 
 	// Inject the headers from the call info into the response headers
-	for key, values := range callInfo.ResponseHeader() {
-		// Add all values for the key
-		for _, value := range values {
-			respHeader.Add(key, value)
-		}
-	}
+	SetHeadersFromCallInfo(respHeader, callInfo)
 	return nil
 }

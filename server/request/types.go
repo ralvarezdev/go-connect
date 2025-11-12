@@ -44,13 +44,6 @@ func (i DefaultInterceptor) CreateClientContextFromRequestContext(
 	clientCtx, callInfo := connect.NewClientContext(context.Background())
 
 	// Inject the headers into the client context
-	for _, header := range headers {
-		// Get the request header value
-		reqHeader := reqHeaders.Get(header)
-
-		// Inject the header
-		callInfo.RequestHeader().Set(header, reqHeader)
-	}
-
-	return clientCtx, nil, err
+	SetHeadersToCallInfo(reqHeaders, callInfo, headers...)
+	return clientCtx, callInfo, nil
 }

@@ -10,3 +10,12 @@ const (
 	// AccessTokenCookieName is the name of the access token cookie
 	AccessTokenCookieName = "X-Access-Token"
 )
+
+var (
+	// AuthHeaders are the headers used for authentication
+	AuthHeaders = []string{
+		AuthorizationKey,
+		RefreshTokenCookieName,
+		AccessTokenCookieName,
+	}
+)

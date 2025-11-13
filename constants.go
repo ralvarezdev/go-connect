@@ -9,6 +9,12 @@ const (
 
 	// AccessTokenCookieName is the name of the access token cookie
 	AccessTokenCookieName = "X-Access-Token"
+	
+	// XForwardedForKey is the key for the X-Forwarded-For header
+	XForwardedForKey = "X-Forwarded-For"
+
+	// RemoteAddrKey is the key for the remote address
+	RemoteAddrKey = "Remote-Addr"
 )
 
 var (

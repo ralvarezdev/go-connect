@@ -93,7 +93,7 @@ func (i DefaultInterceptor) InjectTokens(
 				}
 
 				// Set the "Set-Cookie" header
-				respHeader.Set("Set-Cookie", cookieAttributes.String())
+				respHeader.Add("Set-Cookie", cookieAttributes.String())
 			case goconnect.AccessTokenCookieName:
 				// Set the access token cookie value and duration to the cookie attributes
 				cookieAttributes.Value = accessToken
@@ -102,7 +102,7 @@ func (i DefaultInterceptor) InjectTokens(
 				}
 
 				// Set the "Set-Cookie" header
-				respHeader.Set("Set-Cookie", cookieAttributes.String())
+				respHeader.Add("Set-Cookie", cookieAttributes.String())
 			}
 		}
 	}

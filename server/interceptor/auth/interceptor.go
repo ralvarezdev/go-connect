@@ -11,6 +11,7 @@ import (
 	gojwtvalidator "github.com/ralvarezdev/go-jwt/token/validator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	goflagsmode "github.com/ralvarezdev/go-flags/mode"
 
 	goconnect "github.com/ralvarezdev/go-connect"
 	goconnectrequest "github.com/ralvarezdev/go-connect/server/request"
@@ -21,6 +22,7 @@ type (
 	Interceptor struct {
 		validator     gojwtvalidator.Validator
 		interceptions map[string]*gojwttoken.Token
+		modeFlag *goflagsmode.Flag
 		options       *Options
 		logger        *slog.Logger
 	}
@@ -44,6 +46,7 @@ type (
 //
 //   - validator: The JWT validator service (if nil, no validation will be done, can be used for gRPC gateways)
 //   - interceptions: The map of method names to token types to intercept
+//   - modeFlag: The mode for the interceptor (can be nil)
 //   - options: The options for the authentication interceptor (can be nil)
 //   - logger: The logger for the interceptor (can be nil)
 //
@@ -54,6 +57,7 @@ func NewInterceptor(
 	validator gojwtvalidator.Validator,
 	interceptions map[string]*gojwttoken.Token,
 	options *Options,
+	modeFlag *goflagsmode.Flag,
 	logger *slog.Logger,
 ) (*Interceptor, error) {
 	// Check if either the validator or the gRPC interceptions is nil
@@ -74,6 +78,7 @@ func NewInterceptor(
 	return &Interceptor{
 		validator,
 		interceptions,
+		modeFlag,
 		options,
 		logger,
 	}, nil
@@ -125,6 +130,12 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 			// Extract the request headers from the context
 			reqHeader, err := goconnectrequest.GetHeadersFromRequestContext(ctx)
 			if err != nil {
+				if i.modeFlag != nil && !i.modeFlag.IsProd() {
+					return nil, status.Error(
+						codes.Internal,
+						err.Error(),
+					)
+				}
 				return nil, status.Error(
 					codes.Unauthenticated,
 					ErrUnauthenticated.Error(),
@@ -137,6 +148,12 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 			if findErr != nil {
 				// Try to refresh the access token if the interception is for access tokens
 				if isRefreshTokenInterception || i.options.RefreshTokenFn == nil {
+					if i.modeFlag != nil && !i.modeFlag.IsProd() {
+						return nil, status.Error(
+							codes.Internal,
+							findErr.Error(),
+						)
+					}
 					return nil, status.Error(
 						codes.Unauthenticated,
 						ErrUnauthenticated.Error(),
@@ -147,6 +164,12 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 				cookieName = goconnect.RefreshTokenCookieName
 				refreshToken, findRefreshErr := FindAuthorizationToken(reqHeader, customName, &cookieName)
 				if findRefreshErr != nil {
+					if i.modeFlag != nil && !i.modeFlag.IsProd() {
+						return nil, status.Error(
+							codes.Internal,
+							findRefreshErr.Error(),
+						)
+					}
 					return nil, status.Error(
 						codes.Unauthenticated,
 						ErrUnauthenticated.Error(),

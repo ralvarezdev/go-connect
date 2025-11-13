@@ -15,6 +15,9 @@ const (
 
 	// RemoteAddrKey is the key for the remote address
 	RemoteAddrKey = "Remote-Addr"
+	
+	// XRealIPKey is the key for the X-Real-IP header
+	XRealIPKey = "X-Real-IP"
 )
 
 var (

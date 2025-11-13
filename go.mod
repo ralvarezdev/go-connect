@@ -5,7 +5,7 @@ go 1.25.3
 require (
 	connectrpc.com/connect v1.19.1
 	github.com/ralvarezdev/go-grpc v0.6.4
-	github.com/ralvarezdev/go-jwt v0.8.1
+	github.com/ralvarezdev/go-jwt v0.8.4
 	google.golang.org/grpc v1.76.0
 )
 

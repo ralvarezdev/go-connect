@@ -14,6 +14,8 @@ github.com/ralvarezdev/go-reflect v0.3.1 h1:+u59QNddIwI0lQWhWqO5gYGKC4oR0DP50uEp
 github.com/ralvarezdev/go-reflect v0.3.1/go.mod h1:CsZqMmJCXYow9l2YQIdvIe/q7aeRtlA3gq0r9dmLEN0=
 github.com/ralvarezdev/go-strings v0.2.3 h1:LNmfh75ggwzO89dwh9dRYY4UlVIe2HSAEnu2G5NXKJc=
 github.com/ralvarezdev/go-strings v0.2.3/go.mod h1:8sFOqmPJpqzS7bTjf91EzUCITnwpmkfifwY80GxV5r8=
+github.com/ralvarezdev/go-validator v0.7.5 h1:81qSQZFpVuvxpFMq98RKILvdlUyFw8AkxhcjFi+CIDM=
+github.com/ralvarezdev/go-validator v0.7.5/go.mod h1:JkW3mU7Y7PZJxxT4mfwkYV/Pz/YSRI23NpP0W2hF/Y0=
 golang.org/x/crypto v0.44.0 h1:A97SsFvM3AIwEEmTBiaxPPTYpDC47w720rdiiUvgoAU=
 golang.org/x/crypto v0.44.0/go.mod h1:013i+Nw79BMiQiMsOPcVCB5ZIJbYkerPrGnOa00tvmc=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20251111163417-95abcf5c77ba h1:UKgtfRM7Yh93Sya0Fo8ZzhDP4qBckrrxEr2oF5UIVb8=

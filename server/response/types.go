@@ -19,12 +19,6 @@ type (
 
 	// Options are the options for the tokens response headers interceptor
 	Options struct {
-		// CustomRefreshTokenName is the custom refresh token name to use in the response headers
-		CustomRefreshTokenName *string
-
-		// CustomAccessTokenName is the custom access token name to use in the response headers
-		CustomAccessTokenName *string
-
 		// CookieAttributes is a map of cookie attributes to use for the tokens
 		CookieAttributes []http.Cookie
 	}
@@ -69,14 +63,10 @@ func (i DefaultInterceptor) InjectTokens(
 	}
 
 	// Set the issued token to use as a custom header
-	if i.options != nil && i.options.CustomRefreshTokenName != nil {
-		respHeader.Set(*i.options.CustomRefreshTokenName, refreshToken)
-	}
+	respHeader.Set(goconnect.RefreshTokenKey, refreshToken)
 
 	// Set the issued token to use as a custom header
-	if i.options != nil && i.options.CustomAccessTokenName != nil {
-		respHeader.Set(*i.options.CustomAccessTokenName, accessToken)
-	}
+	respHeader.Set(goconnect.AccessTokenKey, accessToken)
 
 	// Get the cookie attributes for refresh token
 	if i.options != nil && i.options.CookieAttributes != nil {

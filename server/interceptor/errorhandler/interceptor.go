@@ -2,20 +2,21 @@ package errorhandler
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"runtime/debug"
 
 	"connectrpc.com/connect"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	gogrpc "github.com/ralvarezdev/go-grpc"
+	goconnect "github.com/ralvarezdev/go-connect"
+	goflags "github.com/ralvarezdev/go-flags"
+	goflagsmode "github.com/ralvarezdev/go-flags/mode"
 )
 
 type (
 	// Interceptor is the interceptor for the error handler
 	Interceptor struct {
+		modeFlag *goflagsmode.Flag
 		logger *slog.Logger
 	}
 )
@@ -24,12 +25,20 @@ type (
 //
 // Parameters:
 //
+//   - modeFlag: the application mode flag
 //   - logger: the logger to use (can be nil)
 //
 // Returns:
 //
 //   - *Interceptor: the interceptor
-func NewInterceptor(logger *slog.Logger) *Interceptor {
+//   - error: if there was an error creating the interceptor
+func NewInterceptor(modeFlag *goflagsmode.Flag, logger *slog.Logger) (*Interceptor, error) {
+	// Check if the mode flag is nil
+	if modeFlag == nil {
+	 	return nil, goflags.ErrNilFlag
+	}
+	
+	// Create the logger for the interceptor
 	if logger != nil {
 		logger = logger.With(
 			slog.String("grpc_client_interceptor", "error_handler"),
@@ -37,8 +46,9 @@ func NewInterceptor(logger *slog.Logger) *Interceptor {
 	}
 
 	return &Interceptor{
+		modeFlag: modeFlag,
 		logger: logger,
-	}
+	}, nil
 }
 
 // HandleError returns the error handler interceptor
@@ -55,17 +65,31 @@ func (i Interceptor) HandleError() connect.UnaryInterceptorFunc {
 			defer func() {
 				if r := recover(); r != nil {
 					// Log the panic
+					stack := debug.Stack()
 					if i.logger != nil {
 						i.logger.Error(
 							"Panic recovered",
 							slog.Any("method", req.Spec().Procedure),
 							slog.Any("error", r),
-							slog.String("stack_trace", string(debug.Stack())),
+							slog.String("stack_trace", string(stack)),
 						)
 					}
 
-					// Set the error to internal server error
-					err = status.Error(codes.Internal, gogrpc.InternalServerError)
+					// Check if the application is in production mode
+					if i.modeFlag.IsProd() {
+						// Set the error to internal server error
+						err = connect.NewError(connect.CodeInternal, goconnect.ErrInternalServerError)
+					} else {
+						// Set the error to the recovered panic
+						err = connect.NewError(
+							connect.CodeInternal,
+							fmt.Errorf(
+								"Panic: %v\nStack Trace:\n%s",
+								r,
+								string(stack),
+							),
+						)
+					}
 				}
 			}()
 			return next(ctx, req)

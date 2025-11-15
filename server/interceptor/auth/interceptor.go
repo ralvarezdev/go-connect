@@ -9,9 +9,6 @@ import (
 	gojwtgrpc "github.com/ralvarezdev/go-jwt/grpc"
 	gojwttoken "github.com/ralvarezdev/go-jwt/token"
 	gojwtvalidator "github.com/ralvarezdev/go-jwt/token/validator"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	goconnect "github.com/ralvarezdev/go-connect"
 	goconnectrequest "github.com/ralvarezdev/go-connect/server/request"
 )
@@ -27,12 +24,6 @@ type (
 
 	// Options is the options for the authentication interceptor
 	Options struct {
-		// CustomRefreshTokenName is the custom name for the refresh token (if nil, the default name will be used)
-		CustomRefreshTokenName *string
-
-		// CustomAccessTokenName is the custom name for the access token (if nil, the default name will be used)
-		CustomAccessTokenName *string
-
 		// RefreshTokenFn is the function to refresh the access token using the refresh token
 		RefreshTokenFn RefreshTokenFn
 	}
@@ -109,54 +100,52 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 			// Create a flag to indicate if the interception is for refresh tokens
 			isRefreshTokenInterception := *interception == gojwttoken.RefreshToken
 
-			// Get the cookie name from the options if set
-			var (
-				cookieName string
-				customName *string
-			)
-			if isRefreshTokenInterception && i.options != nil {
+			// Get the cookie name and custom header based on the interception type
+			var cookieName,	customHeader string
+			if isRefreshTokenInterception {
 				cookieName = goconnect.RefreshTokenCookieName
-				customName = i.options.CustomRefreshTokenName
-			} else if i.options != nil {
+				customHeader = goconnect.RefreshTokenKey
+			} else {
 				cookieName = goconnect.AccessTokenCookieName
-				customName = i.options.CustomAccessTokenName
+				customHeader = goconnect.RefreshTokenKey
 			}
 
 			// Extract the request headers from the context
 			reqHeader, err := goconnectrequest.GetHeadersFromRequestContext(ctx)
 			if err != nil {
-				return nil, status.Error(
-					codes.Unauthenticated,
-					err.Error(),
+				return nil, connect.NewError(
+					connect.CodeUnauthenticated,
+					err,
 				)
 			}
 
 			// Extract the token from the request
-			token, findErr := FindAuthorizationToken(reqHeader, customName, &cookieName)
+			token, findErr := FindAuthorizationToken(reqHeader, &customHeader, &cookieName)
 			// nolint:nestif
 			if findErr != nil {
 				// Try to refresh the access token if the interception is for access tokens
 				if isRefreshTokenInterception || i.options.RefreshTokenFn == nil {
-					return nil, status.Error(
-						codes.Unauthenticated,
-						ErrUnauthenticated.Error(),
+					return nil, connect.NewError(
+						connect.CodeUnauthenticated,
+						ErrUnauthenticated,
 					)
 				}
 
 				// Get the refresh token from the header
 				cookieName = goconnect.RefreshTokenCookieName
-				refreshToken, findRefreshErr := FindAuthorizationToken(reqHeader, customName, &cookieName)
+				customHeader = goconnect.RefreshTokenKey
+				refreshToken, findRefreshErr := FindAuthorizationToken(reqHeader, &customHeader, &cookieName)
 				if findRefreshErr != nil {
-					return nil, status.Error(
-						codes.Unauthenticated,
-						findRefreshErr.Error(),
+					return nil, connect.NewError(
+						connect.CodeUnauthenticated,
+						findRefreshErr,
 					)
 				}
 
 				// Validate the refresh token and get the validated claims
 				refreshTokenClaims, validateErr := i.validator.ValidateClaims(ctx, refreshToken, *interception)
 				if validateErr != nil {
-					return nil, status.Error(codes.Internal, validateErr.Error())
+					return nil, connect.NewError(connect.CodeInternal, validateErr)
 				}
 
 				// Set the raw token and token claims to the context
@@ -186,7 +175,7 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 			// Validate the token and get the validated claims
 			claims, err := i.validator.ValidateClaims(ctx, token, *interception)
 			if err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
+				return nil, connect.NewError(connect.CodeInternal, err)
 			}
 
 			// Set the raw token and token claims to the context

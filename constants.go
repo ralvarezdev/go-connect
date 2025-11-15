@@ -10,6 +10,12 @@ const (
 	// AccessTokenCookieName is the name of the access token cookie
 	AccessTokenCookieName = "X-Access-Token"
 	
+	// AccessTokenKey is the key for the access token
+	AccessTokenKey = "X-Access-Token"
+	
+	// RefreshTokenKey is the key for the refresh token
+	RefreshTokenKey = "X-Refresh-Token"
+	
 	// XForwardedForKey is the key for the X-Forwarded-For header
 	XForwardedForKey = "X-Forwarded-For"
 

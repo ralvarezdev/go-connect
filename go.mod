@@ -6,7 +6,7 @@ require (
 	connectrpc.com/connect v1.19.1
 	github.com/ralvarezdev/go-flags v0.3.8
 	github.com/ralvarezdev/go-grpc v0.6.4
-	github.com/ralvarezdev/go-jwt v0.8.4
+	github.com/ralvarezdev/go-jwt v0.8.5
 	github.com/ralvarezdev/go-reflect v0.3.1
 	github.com/ralvarezdev/go-validator v0.7.5
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251111163417-95abcf5c77ba

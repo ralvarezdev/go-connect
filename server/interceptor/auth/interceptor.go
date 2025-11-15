@@ -2,20 +2,24 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"connectrpc.com/connect"
+	goconnect "github.com/ralvarezdev/go-connect"
+	goconnectrequest "github.com/ralvarezdev/go-connect/server/request"
+	goflags "github.com/ralvarezdev/go-flags"
+	goflagsmode "github.com/ralvarezdev/go-flags/mode"
 	gogrpc "github.com/ralvarezdev/go-grpc"
 	gojwtgrpc "github.com/ralvarezdev/go-jwt/grpc"
 	gojwttoken "github.com/ralvarezdev/go-jwt/token"
 	gojwtvalidator "github.com/ralvarezdev/go-jwt/token/validator"
-	goconnect "github.com/ralvarezdev/go-connect"
-	goconnectrequest "github.com/ralvarezdev/go-connect/server/request"
 )
 
 type (
 	// Interceptor is the authentication interceptor
 	Interceptor struct {
+		modeFlag      *goflagsmode.Flag
 		validator     gojwtvalidator.Validator
 		interceptions map[string]*gojwttoken.Token
 		options       *Options
@@ -33,6 +37,7 @@ type (
 //
 // Parameters:
 //
+//   - modeFlag: The mode flag to determine the logging level
 //   - validator: The JWT validator service (if nil, no validation will be done, can be used for gRPC gateways)
 //   - interceptions: The map of method names to token types to intercept
 //   - options: The options for the authentication interceptor (can be nil)
@@ -42,11 +47,17 @@ type (
 //
 //   - *Interceptor: The authentication middleware
 func NewInterceptor(
+	modeFlag *goflagsmode.Flag,
 	validator gojwtvalidator.Validator,
 	interceptions map[string]*gojwttoken.Token,
 	options *Options,
 	logger *slog.Logger,
 ) (*Interceptor, error) {
+	// Check if the mode flag is nil
+	if modeFlag == nil {
+		return nil, goflags.ErrNilFlag
+	}
+
 	// Check if either the validator or the gRPC interceptions is nil
 	if validator == nil {
 		return nil, gojwtvalidator.ErrNilValidator
@@ -63,6 +74,7 @@ func NewInterceptor(
 	}
 
 	return &Interceptor{
+		modeFlag,
 		validator,
 		interceptions,
 		options,
@@ -90,7 +102,18 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 						slog.String("method", method),
 					)
 				}
-				return next(ctx, req)
+
+				// Check if the mode is in production
+				if i.modeFlag.IsProd() {
+					return nil, connect.NewError(
+						connect.CodeInternal,
+						goconnect.ErrInternalServerError,
+					)
+				}
+				return nil, connect.NewError(
+					connect.CodeInternal,
+					fmt.Errorf(ErrInterceptionNotFound, method),
+				)
 			}
 			if interception == nil {
 				// Continue to the next handler if no interception is set for the method
@@ -101,7 +124,7 @@ func (i Interceptor) Authenticate() connect.UnaryInterceptorFunc {
 			isRefreshTokenInterception := *interception == gojwttoken.RefreshToken
 
 			// Get the cookie name and custom header based on the interception type
-			var cookieName,	customHeader string
+			var cookieName, customHeader string
 			if isRefreshTokenInterception {
 				cookieName = goconnect.RefreshTokenCookieName
 				customHeader = goconnect.RefreshTokenKey

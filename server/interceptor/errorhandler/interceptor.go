@@ -2,6 +2,7 @@ package errorhandler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"runtime/debug"
@@ -73,6 +74,13 @@ func (i Interceptor) HandleError() connect.UnaryInterceptorFunc {
 							slog.Any("error", r),
 							slog.String("stack_trace", string(stack)),
 						)
+					}
+					
+					// Check if the error is a connect error, if so, return it
+					var connectErr *connect.Error
+					if errors.As(r.(error), &connectErr) {
+						err = connectErr
+						return
 					}
 
 					// Check if the application is in production mode

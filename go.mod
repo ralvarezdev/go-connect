@@ -15,6 +15,6 @@ require (
 require (
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/ralvarezdev/go-strings v0.2.3 // indirect
-	golang.org/x/crypto v0.44.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
 )
